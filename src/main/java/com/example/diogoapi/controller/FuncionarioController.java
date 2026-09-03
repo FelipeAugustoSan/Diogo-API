@@ -1,14 +1,8 @@
 package com.example.diogoapi.controller;
 
-import com.example.diogoapi.dto.FuncionarioPatchRequest;
-import com.example.diogoapi.dto.FuncionarioRequest;
-import com.example.diogoapi.dto.FuncionarioResponse;
-import com.example.diogoapi.dto.IndicadoresResponse;
-import com.example.diogoapi.entity.StatusCandidatura;
-import com.example.diogoapi.service.FuncionarioService;
-import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +16,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.example.diogoapi.dto.FuncionarioPatchRequest;
+import com.example.diogoapi.dto.FuncionarioRequest;
+import com.example.diogoapi.dto.FuncionarioResponse;
+import com.example.diogoapi.dto.IndicadoresResponse;
+import com.example.diogoapi.entity.StatusCandidatura;
+import com.example.diogoapi.service.FuncionarioService;
+
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/funcionarios")
 public class FuncionarioController {
@@ -30,16 +33,6 @@ public class FuncionarioController {
 
     public FuncionarioController(FuncionarioService funcionarioService) {
         this.funcionarioService = funcionarioService;
-    }
-
-    @PostMapping
-    public ResponseEntity<FuncionarioResponse> create(@RequestBody @Valid FuncionarioRequest request) {
-        FuncionarioResponse response = funcionarioService.create(request);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(response.id())
-                .toUri();
-        return ResponseEntity.created(location).body(response);
     }
 
     @GetMapping
@@ -60,9 +53,19 @@ public class FuncionarioController {
         return ResponseEntity.ok(funcionarioService.findById(id));
     }
 
+    @PostMapping
+    public ResponseEntity<FuncionarioResponse> create(@RequestBody @Valid FuncionarioRequest request) {
+        FuncionarioResponse response = funcionarioService.create(request);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(response.id())
+                .toUri();
+        return ResponseEntity.created(location).body(response);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<FuncionarioResponse> update(@PathVariable Long id,
-                                                      @RequestBody @Valid FuncionarioRequest request) {
+                                                     @RequestBody @Valid FuncionarioRequest request) {
         return ResponseEntity.ok(funcionarioService.update(id, request));
     }
 
