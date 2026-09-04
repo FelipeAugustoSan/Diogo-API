@@ -71,7 +71,6 @@ public class FuncionarioService {
 
     public FuncionarioResponse patch(Long id, FuncionarioPatchRequest request) {
         Funcionario existente = getOrFail(id);
-        ensureEmailAvailable(request.email(), id);
 
         Funcionario atualizado = existente.toBuilder().build();
         funcionarioMapper.patchEntity(request, atualizado);
