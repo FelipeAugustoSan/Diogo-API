@@ -28,5 +28,10 @@ public interface FuncionarioMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "nome", ignore = true)
+    @Mapping(target = "email", ignore = true)
+    @Mapping(target = "telefone", ignore = true)
+    @Mapping(target = "departamento", ignore = true)
+    @Mapping(target = "cidade", ignore = true)
     void patchEntity(FuncionarioPatchRequest request, @MappingTarget Funcionario funcionario);
 }
