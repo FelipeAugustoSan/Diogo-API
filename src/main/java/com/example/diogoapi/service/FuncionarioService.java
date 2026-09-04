@@ -9,7 +9,6 @@ import com.example.diogoapi.entity.StatusCandidatura;
 import com.example.diogoapi.mapper.FuncionarioMapper;
 import com.example.diogoapi.repository.FuncionarioRepository;
 import java.util.List;
-import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -29,25 +28,19 @@ public class FuncionarioService {
         this.funcionarioMapper = funcionarioMapper;
     }
 
-    public List<FuncionarioResponse> findAll(String nome, String cargo, StatusCandidatura status) {
-        List<Funcionario> encontrados = funcionarioRepository.findAll().stream()
-                .filter(funcionario -> contains(funcionario.getNome(), nome))
-                .filter(funcionario -> contains(funcionario.getCargo(), cargo))
-                .filter(funcionario -> status == null || status == funcionario.getStatus())
-                .toList();
-
-        return funcionarioMapper.toResponseList(encontrados);
+    public List<FuncionarioResponse> findAll() {
+        return funcionarioMapper.toResponseList(funcionarioRepository.findAll());
     }
 
     public FuncionarioResponse findById(Long id) {
-        return funcionarioMapper.toResponse(getOrFail(id));
+        return funcionarioMapper.toResponse(buscarOuFalhar(id));
     }
 
     public FuncionarioResponse create(FuncionarioRequest request) {
-        ensureEmailAvailable(request.email(), null);
+        garantirEmailDisponivel(request.email(), null);
 
         Funcionario funcionario = funcionarioMapper.toEntity(request);
-        applyDefaultStatus(funcionario);
+        aplicarStatusPadrao(funcionario);
 
         Funcionario saved = funcionarioRepository.save(funcionario);
         log.info("Funcionario {} cadastrado com o id {}", saved.getNome(), saved.getId());
@@ -56,26 +49,26 @@ public class FuncionarioService {
     }
 
     public FuncionarioResponse update(Long id, FuncionarioRequest request) {
-        getOrFail(id);
-        ensureEmailAvailable(request.email(), id);
+        buscarOuFalhar(id);
+        garantirEmailDisponivel(request.email(), id);
 
         Funcionario atualizado = funcionarioMapper.toEntity(request);
         atualizado.setId(id);
-        applyDefaultStatus(atualizado);
+        aplicarStatusPadrao(atualizado);
 
-        funcionarioRepository.replace(atualizado);
+        funcionarioRepository.substituir(atualizado);
         log.info("Funcionario {} atualizado por completo", id);
 
         return funcionarioMapper.toResponse(atualizado);
     }
 
     public FuncionarioResponse patch(Long id, FuncionarioPatchRequest request) {
-        Funcionario existente = getOrFail(id);
+        Funcionario existente = buscarOuFalhar(id);
 
         Funcionario atualizado = existente.toBuilder().build();
         funcionarioMapper.patchEntity(request, atualizado);
 
-        funcionarioRepository.replace(atualizado);
+        funcionarioRepository.substituir(atualizado);
         log.info("Funcionario {} atualizado parcialmente", id);
 
         return funcionarioMapper.toResponse(atualizado);
@@ -83,7 +76,7 @@ public class FuncionarioService {
 
     public void delete(Long id) {
         if (!funcionarioRepository.deleteById(id)) {
-            throw notFound(id);
+            throw naoEncontrado(id);
         }
         log.info("Funcionario {} excluido", id);
     }
@@ -93,17 +86,17 @@ public class FuncionarioService {
 
         return new IndicadoresResponse(
                 todos.size(),
-                countByStatus(todos, StatusCandidatura.EM_ANALISE),
-                countByStatus(todos, StatusCandidatura.APROVADO),
-                countByStatus(todos, StatusCandidatura.REPROVADO),
-                countByStatus(todos, StatusCandidatura.CONTRATADO));
+                contarPorStatus(todos, StatusCandidatura.EM_ANALISE),
+                contarPorStatus(todos, StatusCandidatura.APROVADO),
+                contarPorStatus(todos, StatusCandidatura.REPROVADO),
+                contarPorStatus(todos, StatusCandidatura.CONTRATADO));
     }
 
-    private Funcionario getOrFail(Long id) {
-        return funcionarioRepository.findById(id).orElseThrow(() -> notFound(id));
+    private Funcionario buscarOuFalhar(Long id) {
+        return funcionarioRepository.findById(id).orElseThrow(() -> naoEncontrado(id));
     }
 
-    private void ensureEmailAvailable(String email, Long ignoredId) {
+    private void garantirEmailDisponivel(String email, Long ignoredId) {
         if (funcionarioRepository.existsByEmail(email, ignoredId)) {
             log.warn("Tentativa de usar o e-mail ja cadastrado {}", email);
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -111,32 +104,21 @@ public class FuncionarioService {
         }
     }
 
-    private ResponseStatusException notFound(Long id) {
+    private ResponseStatusException naoEncontrado(Long id) {
         log.warn("Funcionario {} nao encontrado", id);
         return new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "Funcionario nao encontrado para o id " + id + ". Verifique a lista de funcionarios cadastrados.");
     }
 
-    private void applyDefaultStatus(Funcionario funcionario) {
+    private void aplicarStatusPadrao(Funcionario funcionario) {
         if (funcionario.getStatus() == null) {
             funcionario.setStatus(StatusCandidatura.padrao());
         }
     }
 
-    private long countByStatus(List<Funcionario> funcionarios, StatusCandidatura status) {
+    private long contarPorStatus(List<Funcionario> funcionarios, StatusCandidatura status) {
         return funcionarios.stream()
                 .filter(funcionario -> funcionario.getStatus() == status)
                 .count();
-    }
-
-    private boolean contains(String valor, String criterio) {
-        if (criterio == null || criterio.isBlank()) {
-            return true;
-        }
-        return valor != null && normalize(valor).contains(normalize(criterio));
-    }
-
-    private String normalize(String texto) {
-        return texto.trim().toLowerCase(Locale.ROOT);
     }
 }

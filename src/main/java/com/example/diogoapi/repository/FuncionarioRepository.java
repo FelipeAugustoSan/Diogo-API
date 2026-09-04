@@ -32,7 +32,7 @@ public class FuncionarioRepository {
                 .findFirst();
     }
 
-    public synchronized boolean replace(Funcionario atualizado) {
+    public synchronized boolean substituir(Funcionario atualizado) {
         for (int i = 0; i < funcionarios.size(); i++) {
             if (Objects.equals(funcionarios.get(i).getId(), atualizado.getId())) {
                 funcionarios.set(i, atualizado);

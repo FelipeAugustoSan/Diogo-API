@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -20,7 +19,6 @@ import com.example.diogoapi.dto.FuncionarioPatchRequest;
 import com.example.diogoapi.dto.FuncionarioRequest;
 import com.example.diogoapi.dto.FuncionarioResponse;
 import com.example.diogoapi.dto.IndicadoresResponse;
-import com.example.diogoapi.entity.StatusCandidatura;
 import com.example.diogoapi.service.FuncionarioService;
 
 import jakarta.validation.Valid;
@@ -36,11 +34,8 @@ public class FuncionarioController {
     }
 
     @GetMapping
-    public ResponseEntity<List<FuncionarioResponse>> findAll(
-            @RequestParam(required = false) String nome,
-            @RequestParam(required = false) String cargo,
-            @RequestParam(required = false) StatusCandidatura status) {
-        return ResponseEntity.ok(funcionarioService.findAll(nome, cargo, status));
+    public ResponseEntity<List<FuncionarioResponse>> findAll() {
+        return ResponseEntity.ok(funcionarioService.findAll());
     }
 
     @GetMapping("/indicadores")
